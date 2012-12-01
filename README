@@ -1,0 +1,24 @@
+Relics of Annorath Launcher
+====
+
+1. Prerequisites
+
+- qt5
+- icu
+- openssl
+- libtorrent-rasterbar
+- boost
+
+2. Compile
+
+- qmake -project
+- qmake
+- make
+
+3. Installtion
+
+Just copy the files to a directory.
+
+4. Important
+
+If you build this on your own, disable the version check!
