@@ -218,7 +218,7 @@ class HttpUpdate : public QWidget
          */
         void slot_startCheck();
 
-        void slot_installerFinished(int _state, QProcess::ExitStatus _status);
+        void slot_installerFinished();
 
     signals:
 

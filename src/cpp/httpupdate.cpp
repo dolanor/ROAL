@@ -263,11 +263,11 @@ void HttpUpdate::slot_startInstaller(QNetworkReply *reply)
 #endif
 
 #ifdef Q_OS_LINUX
-        // While the client is a linux os, we can simply overwrite stuff and restart the launcher
-        installer.start(settings->getSetting("installLocation") + "launcher/downloads/installer" + " update");
-
         // When process is done, send signal for QApplicationExit and new start of the launcher
-        connect(&installer, SIGNAL(finished(int, QProcess::ExitStatus)),this, SLOT(slot_installerFinished(int, QProcess::ExitStatus)));
+        connect(&installer, SIGNAL(started()),this, SLOT(slot_installerFinished()));
+
+        // While the client is a linux os, we can simply overwrite stuff and restart the launcher
+        installer.start(settings->getSetting("installLocation") + "launcher/downloads/installer", QStringList("update"));
 #endif
     }
     // If error, we stop everything
@@ -342,7 +342,7 @@ void HttpUpdate::slot_getSSLError(QNetworkReply* reply, const QList<QSslError> &
     }
 }
 
-void HttpUpdate::slot_installerFinished(int _state, QProcess::ExitStatus _status)
+void HttpUpdate::slot_installerFinished()
 {
     QApplication::quit();
 }
