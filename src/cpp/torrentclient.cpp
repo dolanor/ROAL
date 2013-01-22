@@ -62,15 +62,15 @@ TorrentClient::TorrentClient(Settings *_settings)
     // Error code
     error_code ec;
 
-    sesSettings.download_rate_limit = settings->getSetting("Relics of Annorath/torDLMax").toInt() * 1024;
-    sesSettings.upload_rate_limit = settings->getSetting("Relics of Annorath/torULMax").toInt() * 1024;
+    sesSettings.download_rate_limit = settings->getSetting("torDLMax").toInt() * 1024;
+    sesSettings.upload_rate_limit = settings->getSetting("torULMax").toInt() * 1024;
     sesSettings.connections_limit = 250; // We let this hardcoded
 
     // Create session and set settings
     ses = new session();
     ses->set_settings(sesSettings);
 
-    ses->listen_on(std::make_pair(settings->getSetting("Relics of Annorath/torPort").toInt(), settings->getSetting("Relics of Annorath/torPort").toInt() + 8 ), ec);
+    ses->listen_on(std::make_pair(settings->getSetting("torPort").toInt(), settings->getSetting("torPort").toInt() + 8 ), ec);
 
     // Check for error
     if (ec)
@@ -82,11 +82,11 @@ TorrentClient::TorrentClient(Settings *_settings)
     add_torrent_params p;
 
     // Get the path
-    QString path = settings->getSetting("Relics of Annorath/installLocation");
+    QString path = settings->getSetting("installLocation");
 
     // Set path
-    p.save_path = path.toUtf8().constData();
-    path = path + "/downloads/roa.torrent";
+    p.save_path = QString(path + "game/").toUtf8().constData();
+    path = path + "launcher/downloads/roa.torrent";
 
     // Start and check for error code
     p.ti = new torrent_info(path.toUtf8().constData());
@@ -102,7 +102,7 @@ TorrentClient::TorrentClient(Settings *_settings)
     // Check for errors
     if (ec)
     {
-        QMessageBox::critical(0, QObject::tr("Error on addng torrent"), QString::fromStdString(ec.message()));
+        QMessageBox::critical(0, QObject::tr("Error on adding torrent"), QString::fromStdString(ec.message()));
     }
 
     torrentStatus = torrentHandler.status();
@@ -161,17 +161,19 @@ void TorrentClient::applySettings()
 
     session_settings sesSettingsTemp = ses->settings();
 
-    sesSettingsTemp.download_rate_limit = settings->getSetting("Relics of Annorath/torDLMax").toInt() * 1024;
-    sesSettingsTemp.upload_rate_limit = settings->getSetting("Relics of Annorath/torULMax").toInt() * 1024;
-    sesSettingsTemp.connections_limit = settings->getSetting("Relics of Annorath/torConMax").toInt();
+    sesSettingsTemp.download_rate_limit = settings->getSetting("torDLMax").toInt() * 1024;
+    sesSettingsTemp.upload_rate_limit = settings->getSetting("torULMax").toInt() * 1024;
+    sesSettingsTemp.connections_limit = settings->getSetting("torConMax").toInt();
 
-    ses->listen_on(std::make_pair(settings->getSetting("Relics of Annorath/torPort").toInt(), settings->getSetting("Relics of Annorath/torPort").toInt() + 8 ), ec);
+    ses->listen_on(std::make_pair(settings->getSetting("torPort").toInt(), settings->getSetting("torPort").toInt() + 8 ), ec);
 
     // Check for error
     if (ec)
     {
         QMessageBox::critical(0, QObject::tr("Error on setting the port"), QString::fromStdString(ec.message()));
     }
+
+    ses->set_settings(sesSettingsTemp);
 }
 
 int TorrentClient::getSize()

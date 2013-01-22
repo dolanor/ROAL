@@ -1,3 +1,6 @@
+#ifndef HTTPDOWNLOAD_H
+#define HTTPDOWNLOAD_H
+
 /**
  * \copyright
  *              Copyright © 2011 Manuel Gysin
@@ -22,9 +25,9 @@
  *              You should have received a copy of the GNU General Public License
  *              along with Relics of Annorath Launcher.  If not, see <http://www.gnu.org/licenses/>.
  *
- * \brief       Handels the update process for the launcher and related files
+ * \brief       The http download part, used for downloading game files over http.
  *
- * \file    	httpupdate.h
+ * \file    	httpdownload.h
  *
  * \note
  *
@@ -37,60 +40,39 @@
  *
  */
 
-#ifndef HTTPUPDATE_H
-#define HTTPUPDATE_H
-
 /******************************************************************************/
 /*                                                                            */
 /*    C/C++ includes                                                          */
 /*                                                                            */
 /******************************************************************************/
-#include <iostream>
-
-
 
 /******************************************************************************/
 /*                                                                            */
 /*    Qt includes                                                             */
 /*                                                                            */
 /******************************************************************************/
-#include <QWidget>
-#include <QNetworkAccessManager>
-#include <QNetworkReply>
+#include <QtNetwork/QNetworkAccessManager>
+#include <QtNetwork/QSslConfiguration>
+#include <QtNetwork/QNetworkRequest>
+#include <QtNetwork/QNetworkReply>
+#include <QtNetwork/QSslError>
 #include <QFile>
-#include <QTimer>
-#include <QProcess>
+#include <QStringList>
 #include <QDir>
-#include <QSslError>
-#include <QTranslator>
-#include <QObject>
-#include <QSslConfiguration>
 
 /******************************************************************************/
 /*                                                                            */
 /*    Others includes                                                         */
 /*                                                                            */
 /******************************************************************************/
-#include "settings.h"
-
-#ifdef Q_OS_WIN
-#include <Windows.h>
-#endif
+#include "filevalidationthread.h"
 
 /**
- * \addtogroup Ui
+ * \brief Class for the torrent stuff
  */
-namespace Ui {
-    class HttpUpdate;
-}
-
-/**
- * \brief Check for new version and get needed update files.
- */
-class HttpUpdate : public QWidget
+class HttpDownload : public QObject
 {
         Q_OBJECT
-
     public:
 
         /******************************************************************************/
@@ -107,15 +89,27 @@ class HttpUpdate : public QWidget
 
         /**
          * \brief Constuctor
-         * \param _settings Settings object
-         * \param parent Parent
+         *
+         * \param[in] *_settings Pointer to the settings
+         *
          */
-        explicit HttpUpdate(Settings *_settings, QWidget *parent = 0);
+        HttpDownload(QString _path);
 
         /**
          * \brief Deconstuctor
-         */
-        ~HttpUpdate();
+        */
+        ~HttpDownload();
+
+        int progress();
+
+        double networkSpeed();
+
+        qint64 getFullDownloadSize();
+        qint64 getCurrentDownloadSize();
+
+        QString getStatus();
+
+        int getFilesLeft();
 
     private:
 
@@ -126,49 +120,87 @@ class HttpUpdate : public QWidget
         /******************************************************************************/
 
         /**
-         * \brief The UI-File
-         */
-        Ui::HttpUpdate *ui;
-
-        /**
-         * \brief Manages the session for network communication.
+         * \brief Network manager for downloading files
          */
         QNetworkAccessManager manager;
 
         /**
-         * \brief Settings object
-         */
-        Settings *settings;
-
-        /**
-         * \brief String with launcher version on server
-         */
-        QString remoteVersion;
-
-        /**
-         * \brief A simply timer used for delay the checking
-         */
-        QTimer timer;
-
-        /**
-         * \brief Process for updating the launcher
-         */
-        QProcess installer;
-
-        /**
-         * \brief SSL configuration to add custom CAs
+         * \brief SSL config for custom CAs
          */
         QSslConfiguration sslConfig;
 
         /**
-         * \brief SSL certificates for custom CAs
+         * \brief Custom CAs
          */
         QList<QSslCertificate> certificates;
 
         /**
-         * \brief Network request manager for downloading
+         * \brief Request for downloading
          */
         QNetworkRequest request;
+
+        /**
+         * \brief Installation path
+         */
+        QString installationPath;
+
+        /**
+         * \brief File list to download
+         */
+        QStringList fileList;
+
+        /**
+         * \brief MD5 of files for verifying
+         */
+        QStringList fileListMD5;
+
+        /**
+         * \brief Sizes of files for verifying
+         */
+        QStringList fileListSize;
+
+        /**
+         * \brief MD5 of files for verifying
+         */
+        //QStringList fileListSize;
+
+        /**
+         * \brief Current download object used for speed measuring
+         */
+        QNetworkReply *currentDownload;
+
+        QTime downloadTime;
+
+        QString status;
+
+        FileValidationThread *thread;
+
+        /**
+         * \brief Current download phase (0 init, 1 file download)
+         */
+        int downloadPhase;
+
+        /**
+         * \brief Files left to download
+         */
+        int filesLeft;
+
+        /**
+         * \brief File size already downloaded
+         */
+        qint64 totalSizeDownload;
+
+        /**
+         * \brief File size already downloaded
+         */
+        qint64 totalSizeDownloaded;
+
+        /**
+         * \brief File size downloaded for the current one
+         */
+        qint64 totalSizeDownloadedCurrent;
+
+        double speed;
 
         /******************************************************************************/
         /*                                                                            */
@@ -177,58 +209,44 @@ class HttpUpdate : public QWidget
         /******************************************************************************/
 
         /**
-         * \brief Prepares the network request for downloading the installer binary
+         * \brief Get file list from remote server
          */
-        void downloadInstaller();
+        void getRemoteFileList();
 
         /**
-         * \brief Prepares the network request for downloading the torrent file
+         * \brief Prepare the download
          */
-        void downloadTorrent();
+        void prepareDownload();
+
+        /**
+         * \brief Download the next file in queue
+         */
+        void getNextFile();
+
+        /**
+         * \brief Check file with md5
+         */
+        void checkFilesWithHash();
 
     private slots:
 
         /**
-         * \brief Check the version remotly
-         * \param reply Reply with data
+         * \brief Saves the file when download finished
+         * \param reply The data of the downloaded file
          */
-        void slot_checkVersion(QNetworkReply* reply);
+        void slot_downloadFinished(QNetworkReply *reply);
+
+        void downloadProgress(qint64 bytesReceived, qint64 bytesTotal);
+
+        void slot_verificationDone();
 
         /**
-         * \brief Saves and starts the installer
-         * \param reply Reply with data
-         */
-        void slot_startInstaller(QNetworkReply* reply);
-
-        /**
-         * \brief Saves the torrent to disk
-         * \param reply Reply with data
-         */
-        void slot_saveTorrent(QNetworkReply* reply);
-
-        /**
-         * \brief Checks for SSL errors when requesting data from remote server
-         * \param reply Reply with data
-         * \param erros List with SSL errors
+         * \brief Checks for SSL errors
+         * \param reply The reply
+         * \param errors Error list
          */
         void slot_getSSLError(QNetworkReply* reply, const QList<QSslError> &errors);
-
-        /**
-         * \brief Starts the check process called by timer
-         */
-        void slot_startCheck();
-
-        void slot_installerFinished(int _state, QProcess::ExitStatus _status);
-
-    signals:
-
-        /**
-         * \brief Signal for the outside about the state of the update
-         * \param updateStatus Was the update successfully or not
-         * \param updateState The application state if restart is needed or not
-         */
-        void updateChecked(bool updateStatus, bool updateState);
-
 };
 
-#endif // HTTPUPDATE_H
+
+#endif // HTTPDOWNLOAD_H

@@ -64,11 +64,13 @@
 /*                                                                            */
 /******************************************************************************/
 //#define BOOST_ALL_DYN_LINK
-//#define BOOST_ASIO_DYN_LINK
+#define BOOST_ASIO_DYN_LINK
 
+#ifndef Q_MOC_RUN
 #include "libtorrent/entry.hpp"
 #include "libtorrent/bencode.hpp"
 #include "libtorrent/session.hpp"
+#endif // Q_MOC_RUN
 
 /******************************************************************************/
 /*                                                                            */

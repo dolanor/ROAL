@@ -43,6 +43,9 @@
 /*    Qt includes                                                             */
 /*                                                                            */
 /******************************************************************************/
+#define WIN32_LEAN_AND_MEAN
+#define NOMINMAX
+
 #include <QApplication>
 #include <QtGui>
 #include <QFontDatabase>
@@ -54,7 +57,6 @@
 /*                                                                            */
 /******************************************************************************/
 #include "../h/mainwindow.h"
-
 
 /**
  * \brief The main loop-
@@ -76,7 +78,7 @@ int main(int argc, char *argv[])
     a.setApplicationName("Relics of Annorath Launcher");
     a.setApplicationDisplayName("Relics of Annorath Launcher"); // This seems to have no affect yet, wait for qt5 realese version
 
-    a.setApplicationVersion("002.000.001"); // Do not fuck this up, it is used for application update process
+    a.setApplicationVersion("003.000.005"); // Do not fuck this up, it is used for application update process
 
     a.setOrganizationName("QuantumBytes inc.");
     a.setOrganizationDomain("quantum-bytes.com");

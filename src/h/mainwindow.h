@@ -55,6 +55,9 @@
 #include <QAction>
 #include <QTranslator>
 #include <QProcessEnvironment>
+#include <QDesktopWidget>
+#include <QtXml/QDomDocument>
+#include <QWebFrame>
 
 /******************************************************************************/
 /*                                                                            */
@@ -64,6 +67,9 @@
 #include "torrentclient.h"
 #include "httpupdate.h"
 #include "settings.h"
+#include "httpdownload.h"
+#include "firstrun.h"
+#include "customsound.h"
 
 /**
  * \addtogroup Ui
@@ -113,6 +119,11 @@ class MainWindow : public QMainWindow
         /******************************************************************************/
 
         /**
+         * \brief The sound source for background sound
+         */
+        CustomSound *sound;
+
+        /**
          * \brief The UI-File
          */
         Ui::MainWindow *ui;
@@ -159,11 +170,6 @@ class MainWindow : public QMainWindow
         Settings settings;
 
         /**
-         * \brief The sound source for background sound
-         */
-        QSound *sound;
-
-        /**
          * \brief Application translator
          */
         QTranslator *translator;
@@ -177,6 +183,16 @@ class MainWindow : public QMainWindow
          * \brief Process to start the main application (Relics of Annorath)
          */
         QProcess game;
+
+        /**
+         * \brief HTTP download manager
+         */
+        HttpDownload *httpManager;
+
+        /**
+         * \brief FirstRun Dialog
+         */
+        FirstRun *firstRun;
 
         /**
          * \brief Flag for checking if window is moved
@@ -223,6 +239,8 @@ class MainWindow : public QMainWindow
          * \brief Retranslate the complate application
          */
         void retranslate();
+
+        void startLauncher();
 
         /******************************************************************************/
         /*                                                                            */
@@ -281,6 +299,12 @@ class MainWindow : public QMainWindow
         void slot_updateTorrentStatus();
 
         /**
+         * \brief Get newst state about the http download
+         */
+        void slot_updateHttpStatus();
+
+
+        /**
          * \brief Hide/Unhide the launcher
          * \param reason The activation reason
          */
@@ -314,18 +338,6 @@ class MainWindow : public QMainWindow
         void on_buttonPlay_clicked();
 
         /**
-         * \brief Change to selected language
-         * \param The language index selected
-         */
-        void on_boxLanguage_currentIndexChanged(int index);
-
-        /**
-         * \brief Change to selected rendering mode
-         * \param The rendering mode index selected
-         */
-        void on_boxRendering_currentIndexChanged(int index);
-
-        /**
          * \brief Set max. download limit (kB/s)
          */
         void on_lineMaxDL_editingFinished();
@@ -345,6 +357,28 @@ class MainWindow : public QMainWindow
          * \brief Use HTTP or Torrent
          */
         void on_checkHTTP_clicked();
+
+        /**
+         * \brief Change to selected language
+         * \param The language index selected
+         */
+        void slot_boxLanguage_currentIndexChanged(int index);
+
+        /**
+         * \brief Change to selected rendering mode
+         * \param The rendering mode index selected
+         */
+        void slot_boxRendering_currentIndexChanged(int index);
+
+        void slot_setDownloadMethod(bool _mode);
+
+        void on_buttonContact_clicked();
+        void on_buttonHelp_clicked();
+        void on_buttonFAQ_clicked();
+
+        void linkClickedSlot(QUrl _url);
+
+        void slot_error(QProcess::ProcessError _error);
 };
 
 #endif // MAINWINDOW_H

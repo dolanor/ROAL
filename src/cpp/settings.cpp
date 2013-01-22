@@ -56,7 +56,7 @@ Settings::Settings()
     userSettings = new QSettings(QSettings::IniFormat, QSettings::UserScope, QCoreApplication::organizationName(), QCoreApplication::applicationName());
 
     //Check if client is configured
-    if(userSettings->value("Relics of Annorath/configured").toString() != "true")
+    if(userSettings->value("configured").toString() != "true")
     {
         setDefaultSettings();
     }
@@ -91,9 +91,6 @@ void Settings::setSetting(QString _settingName, QString _settingValue)
 
 void Settings::setDefaultSettings()
 {
-    //General settings
-    userSettings->beginGroup("Relics of Annorath");
-
     switch(QLocale::system().language())
     {
         case QLocale::English:
@@ -102,15 +99,19 @@ void Settings::setDefaultSettings()
         case QLocale::German:
             userSettings->setValue("language","german");
             break;
+        case QLocale::Italian:
+            userSettings->setValue("language","italian");
+            break;
+        case QLocale::French:
+            userSettings->setValue("language","french");
+            break;
+        case QLocale::Spanish:
+            userSettings->setValue("language","spain");
+            break;
         default:
             userSettings->setValue("language","english");
             break;
     }
-
-    userSettings->setValue("fullscreen","false");
-
-    userSettings->setValue("installLocation", QApplication::applicationDirPath());
-    userSettings->setValue("resolution","1280x1024");
 
     userSettings->setValue("torPort","6881");
     userSettings->setValue("torDLMax", "0");
@@ -127,9 +128,8 @@ void Settings::setDefaultSettings()
     userSettings->setValue("rendering","opengl");
 #endif
 
-#ifdef Q_WS_WIN
+#ifdef Q_OS_WIN
     userSettings->setValue("rendering","direct3d11");
 #endif
 
-    userSettings->endGroup();
 }

@@ -45,10 +45,6 @@
 #include "../h/httpupdate.h"
 #include "ui_httpupdate.h"
 
-#ifdef Q_WS_WIN
-#include <Windows.h>
-#endif
-
 /******************************************************************************/
 /*                                                                            */
 /*    Constructor/Deconstructor                                               */
@@ -62,19 +58,23 @@ HttpUpdate::HttpUpdate(Settings *_settings, QWidget *parent) :
     // Create the GUI
     ui->setupUi(this);
 
+    // Remove window borders
     setWindowFlags(Qt::FramelessWindowHint);
+    setAttribute(Qt::WA_TranslucentBackground, true);
 
     // Create the settings object
     settings = _settings;
 
     // Set the path of the torrent
-    QString torrentPath = settings->getSetting("Relics of Annorath/installLocation") + "/roa.torrent";
+    /// \todo Remove this
+    QString torrentPath = settings->getSetting("installLocation") + "/roa.torrent";
 
     // Check if the torrent exists
+    /// \todo Remove this
     if(!QFile::exists(torrentPath))
     {
         // If does not exists we set version to 0, so we force a check of the game content.
-        settings->setSetting(QString("Relics of Annorath/version"), "0");
+        settings->setSetting(QString("version"), "0");
     }
 
     // Add certificates
@@ -117,17 +117,17 @@ void HttpUpdate::downloadInstaller()
     // Download the installer file from the remote server
 #ifdef Q_OS_WIN32
 #ifdef Q_OS_WIN64
-    manager.get(QNetworkRequest(QUrl("https://launcher.annorath-game.com/launcher/installer_win_x86_64.exe")));
+    request.setUrl(QUrl("https://launcher.annorath-game.com/data/installer/installer_win_x86_64.exe"));
 #else
-    manager.get(QNetworkRequest(QUrl("https://launcher.annorath-game.com/launcher/installer_win_x86.exe")));
+    request.setUrl(QUrl("https://launcher.annorath-game.com/data/installer/installer_win_x86.exe"));
 #endif
 #endif
 
 #ifdef Q_OS_LINUX
 #ifdef __x86_64__
-    request.setUrl(QUrl("https://launcher.annorath-game.com/launcher/installer_lin_x86_64.bin"));
+    request.setUrl(QUrl("https://launcher.annorath-game.com/data/installer/installer_linux_x86_64"));
 #else
-    request.setUrl(QUrl("https://launcher.annorath-game.com/launcher/installer_lin_x86.bin"));
+    request.setUrl(QUrl("https://launcher.annorath-game.com/data/installer/installer_linux_x86"));
 #endif
 #endif
 
@@ -138,7 +138,7 @@ void HttpUpdate::downloadInstaller()
 void HttpUpdate::downloadTorrent()
 {
     // Download the new torrent
-    request.setUrl(QUrl("https://launcher.annorath-game.com/launcher/roa.torrent"));
+    request.setUrl(QUrl("https://launcher.annorath-game.com/data/torrent/roa.torrent"));
 
     connect(&manager, SIGNAL(finished(QNetworkReply*)),this, SLOT(slot_saveTorrent(QNetworkReply*)));
 
@@ -158,10 +158,10 @@ void HttpUpdate::slot_startCheck()
 
     // Connect the manager to the finished signal, when the signal is stated we have everything
     connect(&manager, SIGNAL(finished(QNetworkReply*)),this, SLOT(slot_checkVersion(QNetworkReply*)));
-    connect(&manager, SIGNAL(sslErrors(QNetworkReply*, const QList<QSslError>&)),this, SLOT(getSSLError(QNetworkReply*, const QList<QSslError>&)));
+    connect(&manager, SIGNAL(sslErrors(QNetworkReply*, const QList<QSslError>&)),this, SLOT(slot_getSSLError(QNetworkReply*, const QList<QSslError>&)));
 
     // Download the version file from the remote server
-    request.setUrl(QUrl("https://launcher.annorath-game.com/launcher/launcher.txt"));
+    request.setUrl(QUrl("https://launcher.annorath-game.com/data/launcher/version.txt"));
 
     manager.get(request);
 }
@@ -209,18 +209,18 @@ void HttpUpdate::slot_startInstaller(QNetworkReply *reply)
         ui->label->setText(tr("Saving new launcher"));
 
         // Check if the folder exists
-        if(!QDir(settings->getSetting("Relics of Annorath/installLocation") + "/downloads").exists())
+        if(!QDir(settings->getSetting("installLocation") + "launcher/downloads").exists())
         {
-            QDir().mkdir(settings->getSetting("Relics of Annorath/installLocation") + "/downloads");
+            QDir().mkdir(settings->getSetting("installLocation") + "launcher/downloads");
         }
 
         // Open the file to write to
 #ifdef Q_OS_WIN32
-        QFile file(settings->getSetting("Relics of Annorath/installLocation") + "/downloads/launcher.exe");
+        QFile file(settings->getSetting("installLocation") + "launcher/downloads/installer.exe");
 #endif
 
 #ifdef Q_OS_LINUX
-        QFile file(settings->getSetting("Relics of Annorath/installLocation") + "/downloads/launcher.tar.gz");
+        QFile file(settings->getSetting("installLocation") + "launcher/downloads/installer");
 #endif
 
         file.open(QIODevice::WriteOnly);
@@ -237,21 +237,37 @@ void HttpUpdate::slot_startInstaller(QNetworkReply *reply)
         // Write the file
         stream.writeRawData(temp, size);
 
+        // Set permissions
+        file.setPermissions(QFile::ExeUser | QFile::ExeGroup | QFile::ExeOwner | QFile::WriteUser | QFile::WriteGroup | QFile::WriteOwner | QFile::ReadGroup | QFile::ReadOwner | QFile::ReadUser);
+
         // Close the file
         file.close();
 
-#ifdef Q_WS_WIN
-        // Needed cause of UAC, my lord... Setup is running with /silent
-        ShellExecute(0, 0,  reinterpret_cast<const WCHAR*>(QString(settings->getSetting("Relics of Annorath/installLocation") + "/downloads/launcher.exe").utf16()), reinterpret_cast<const WCHAR*>(QString(" /silent").utf16()), NULL, SW_SHOWNORMAL);
+#ifdef Q_OS_WIN
+
+        SHELLEXECUTEINFO ShExecInfo = {0};
+        ShExecInfo.cbSize = sizeof(SHELLEXECUTEINFO);
+        ShExecInfo.fMask = SEE_MASK_NOCLOSEPROCESS;
+        ShExecInfo.hwnd = NULL;
+        ShExecInfo.lpVerb = NULL;
+        ShExecInfo.lpFile = reinterpret_cast<const WCHAR*>(QString(settings->getSetting(QString("installLocation")) + "launcher/downloads/installer.exe").utf16());
+        ShExecInfo.lpParameters = reinterpret_cast<const WCHAR*>(QString(" update").utf16());
+        ShExecInfo.lpDirectory = NULL;
+        ShExecInfo.nShow = SW_HIDE;
+        ShExecInfo.hInstApp = NULL;
+        ShellExecuteEx(&ShExecInfo);
+        WaitForSingleObject(ShExecInfo.hProcess,0);
+
+        //ShellExecute(0, 0,  reinterpret_cast<const WCHAR*>(QString(settings->getSetting("installLocation") + "launcher/downloads/installer.exe").utf16()), reinterpret_cast<const WCHAR*>(QString(" update").utf16()), NULL, SW_SHOWNORMAL);
         emit updateChecked(false, true);
 #endif
 
 #ifdef Q_OS_LINUX
         // While the client is a linux os, we can simply overwrite stuff and restart the launcher
-        //installer.start("tar xfvz " + settings->getSetting("Relics of Annorath/installLocation") + "/downloads/launcher.tar.gz" + " -C " + settings->getSetting("Relics of Annorath/installLocation"));
+        installer.start(settings->getSetting("installLocation") + "launcher/downloads/installer" + " update");
 
         // When process is done, send signal for QApplicationExit and new start of the launcher
-        //connect(&installer, SIGNAL(finished(int, QProcess::ExitStatus)),this, SLOT(installerFinished(int, QProcess::ExitStatus)));
+        connect(&installer, SIGNAL(finished(int, QProcess::ExitStatus)),this, SLOT(slot_installerFinished(int, QProcess::ExitStatus)));
 #endif
     }
     // If error, we stop everything
@@ -273,13 +289,13 @@ void HttpUpdate::slot_saveTorrent(QNetworkReply *reply)
     if(reply->error() == QNetworkReply::NoError)
     {
         // Check if the folder exists
-        if(!QDir(settings->getSetting("Relics of Annorath/installLocation") + "/downloads").exists())
+        if(!QDir(settings->getSetting("installLocation") + "launcher/downloads").exists())
         {
-            QDir().mkdir(settings->getSetting("Relics of Annorath/installLocation") + "/downloads");
+            QDir().mkdir(settings->getSetting("installLocation") + "launcher/downloads");
         }
 
         // Open the file to write to
-        QFile file(settings->getSetting("Relics of Annorath/installLocation") + "/downloads/roa.torrent");
+        QFile file(settings->getSetting("installLocation") + "launcher/downloads/roa.torrent");
         file.open(QIODevice::WriteOnly);
 
         // Open a stream to write into the file
@@ -298,7 +314,7 @@ void HttpUpdate::slot_saveTorrent(QNetworkReply *reply)
         file.close();
 
         // Set the new version to the settings
-        settings->setSetting(QString("Relics of Annorath/version"), remoteVersion);
+        settings->setSetting(QString("version"), remoteVersion);
 
         // Send the signal that we are done here
         emit updateChecked(true, false);
@@ -324,4 +340,9 @@ void HttpUpdate::slot_getSSLError(QNetworkReply* reply, const QList<QSslError> &
         //reply->ignoreSslErrors();
         ui->label->setText(reply->errorString());
     }
+}
+
+void HttpUpdate::slot_installerFinished(int _state, QProcess::ExitStatus _status)
+{
+    QApplication::quit();
 }
