@@ -78,13 +78,21 @@ int main(int argc, char *argv[])
     a.setApplicationName("Relics of Annorath Launcher");
     a.setApplicationDisplayName("Relics of Annorath Launcher"); // This seems to have no affect yet, wait for qt5 realese version
 
-    a.setApplicationVersion("003.000.005"); // Do not fuck this up, it is used for application update process
+    a.setApplicationVersion("004.000.000"); // Do not fuck this up, it is used for application update process
 
     a.setOrganizationName("QuantumBytes inc.");
     a.setOrganizationDomain("quantum-bytes.com");
 
     // Add custom font
-    QFontDatabase::addApplicationFont(":/font/ModernAntiqua.ttf");
+    QFontDatabase::addApplicationFont(":/font/Ubuntu-B.ttf");
+    QFontDatabase::addApplicationFont(":/font/Ubuntu-BI.ttf");
+    QFontDatabase::addApplicationFont(":/font/Ubuntu-C.ttf");
+    QFontDatabase::addApplicationFont(":/font/Ubuntu-L.ttf");
+    QFontDatabase::addApplicationFont(":/font/Ubuntu-LI.ttf");
+    QFontDatabase::addApplicationFont(":/font/Ubuntu-M.ttf");
+    QFontDatabase::addApplicationFont(":/font/Ubuntu-MI.ttf");
+    QFontDatabase::addApplicationFont(":/font/Ubuntu-R.ttf");
+    QFontDatabase::addApplicationFont(":/font/Ubuntu-RI.ttf");
 
     // Check if launcer is running
     if (a.isRunning())

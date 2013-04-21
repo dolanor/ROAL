@@ -64,7 +64,10 @@
 /*                                                                            */
 /******************************************************************************/
 //#define BOOST_ALL_DYN_LINK
+
+#ifdef Q_OS_WIN
 #define BOOST_ASIO_DYN_LINK
+#endif
 
 #ifndef Q_MOC_RUN
 #include "libtorrent/entry.hpp"

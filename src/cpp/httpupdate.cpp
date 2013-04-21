@@ -117,17 +117,17 @@ void HttpUpdate::downloadInstaller()
     // Download the installer file from the remote server
 #ifdef Q_OS_WIN32
 #ifdef Q_OS_WIN64
-    request.setUrl(QUrl("https://launcher.annorath-game.com/data/installer/installer_win_x86_64.exe"));
+    request.setUrl(QUrl(QString(HTTP_URL_CONTENT_DATA) + QString("windows_x86_64/installer/roainstaller.exe")));
 #else
-    request.setUrl(QUrl("https://launcher.annorath-game.com/data/installer/installer_win_x86.exe"));
+    request.setUrl(QUrl(QString(HTTP_URL_CONTENT_DATA) + QString("windows_x86/installer/roainstaller.exe")));
 #endif
 #endif
 
 #ifdef Q_OS_LINUX
 #ifdef __x86_64__
-    request.setUrl(QUrl("https://launcher.annorath-game.com/data/installer/installer_linux_x86_64"));
+    request.setUrl(QUrl(QString(HTTP_URL_CONTENT_DATA) + QString("linux_x86_64/installer/roainstaller")));
 #else
-    request.setUrl(QUrl("https://launcher.annorath-game.com/data/installer/installer_linux_x86"));
+    request.setUrl(QUrl(QString(HTTP_URL_CONTENT_DATA) + QString("linux_x86/installer/roainstaller")));
 #endif
 #endif
 
@@ -138,7 +138,7 @@ void HttpUpdate::downloadInstaller()
 void HttpUpdate::downloadTorrent()
 {
     // Download the new torrent
-    request.setUrl(QUrl("https://launcher.annorath-game.com/data/torrent/roa.torrent"));
+    request.setUrl(QUrl(QString(HTTP_URL_CONTENT_DATA) + QString("torrent/roa.torrent")));
 
     connect(&manager, SIGNAL(finished(QNetworkReply*)),this, SLOT(slot_saveTorrent(QNetworkReply*)));
 
@@ -161,7 +161,7 @@ void HttpUpdate::slot_startCheck()
     connect(&manager, SIGNAL(sslErrors(QNetworkReply*, const QList<QSslError>&)),this, SLOT(slot_getSSLError(QNetworkReply*, const QList<QSslError>&)));
 
     // Download the version file from the remote server
-    request.setUrl(QUrl("https://launcher.annorath-game.com/data/launcher/version.txt"));
+    request.setUrl(QUrl(QString(HTTP_URL_CONTENT_DATA) + QString("launcher/version.txt")));
 
     manager.get(request);
 }

@@ -59,35 +59,7 @@ HttpDownload::HttpDownload(QString _path)
     totalSizeDownloaded = 0;
     speed = 0;
     status = "checking";
-
-    //Create all dirs, maybe one is missing
-    QStringList dirs;
-    dirs << installationPath + "game"
-         << installationPath + "game/bin"
-         << installationPath + "game/data"
-         << installationPath + "game/lib"
-         << installationPath + "game/data/logs"
-         << installationPath + "game/data/relics_of_annorath"
-         << installationPath + "game/data/relics_of_annorath/configuration"
-         << installationPath + "game/data/relics_of_annorath/configuration/gui"
-         << installationPath + "game/data/relics_of_annorath/terrains"
-         << installationPath + "game/data/relics_of_annorath/terrains/merasurien"
-         << installationPath + "game/data/relics_of_annorath/terrains/merasurien/1_14_westzones"
-         << installationPath + "game/data/relics_of_annorath/terrains/merasurien/1_14_westzones/1_14_westzones"
-         << installationPath + "game/data/relics_of_annorath/terrains/merasurien/1_14_westzones/Layers"
-         << installationPath + "game/data/relics_of_annorath/terrains/merasurien/3_14_Nordzone1"
-         << installationPath + "game/data/relics_of_annorath/terrains/merasurien/3_14_Nordzone1/3_14_nordzone1"
-         << installationPath + "game/data/relics_of_annorath/terrains/merasurien/3_14_Nordzone1/Terrain_Masken"
-         << installationPath + "game/data/relics_of_annorath/terrains/merasurien/4_14_Nordzone2"
-         << installationPath + "game/data/relics_of_annorath/terrains/merasurien/4_14_Nordzone2/4_14_nordzone2";
-
-
-    for(int i = 0; i < dirs.size(); i++)
-    {
-        QDir dir(dirs.at(i));
-        if(!dir.exists())
-            QDir().mkpath(dirs.at(i));
-    }
+    archive = new FileDecompression();
 
     getRemoteFileList();
 }
@@ -101,7 +73,7 @@ int HttpDownload::progress()
 {
     int value;
 
-    if(status == "downloading")
+    if(status == "downloading" || status == "extracting")
         value = float(totalSizeDownloaded + totalSizeDownloadedCurrent) / float(totalSizeDownload + 0.1) * 100;
     else if(status == "done")
         value = 100;
@@ -156,7 +128,7 @@ void HttpDownload::getRemoteFileList()
     connect(&manager, SIGNAL(finished(QNetworkReply*)),this, SLOT(slot_downloadFinished(QNetworkReply*)));
     connect(&manager, SIGNAL(sslErrors(QNetworkReply*, const QList<QSslError>&)),this, SLOT(slot_getSSLError(QNetworkReply*, const QList<QSslError>&)));
 
-    request.setUrl(QUrl("https://launcher.annorath-game.com/data/game/game_content.txt"));
+    request.setUrl(QUrl( QString(HTTP_URL_CONTENT_DATA) + QString("game/game_content.txt")));
 
     // Start download
     manager.get(request);
@@ -178,11 +150,11 @@ void HttpDownload::prepareDownload()
             // Check if we got valid input
             if(tmp.size() == 3)
             {
-                    // Save values
-                    fileList.append(tmp.at(0));
-                    fileListMD5.append(tmp.at(1));
-                    fileListSize.append(tmp.at(2));
-                    //totalSizeDownload += tmp.at(2).toInt();
+                // Save values
+                fileList.append(tmp.at(0));
+                fileListMD5.append(tmp.at(1));
+                fileListSize.append(tmp.at(2));
+                //totalSizeDownload += tmp.at(2).toInt();
             }
         }
     }
@@ -208,7 +180,7 @@ void HttpDownload::getNextFile()
     if(filesLeft > 0)
     {
         // Set URL and start download
-        request.setUrl(QUrl("https://launcher.annorath-game.com/data/" + fileList.at(filesLeft-1)));
+        request.setUrl(QUrl(QString(HTTP_URL_CONTENT_DATA) + QString(fileList.at(filesLeft-1))));
 
         // Start request
         currentDownload = manager.get(request);
@@ -236,8 +208,17 @@ void HttpDownload::getNextFile()
 
 void HttpDownload::slot_downloadFinished(QNetworkReply *reply)
 {
+    /**
+     * @brief The file name
+     */
     QString fileName;
 
+    /**
+     * @brief Flag for extraction
+     */
+    bool needsExtraction = false;
+
+    // Check in which download phase we are
     switch(downloadPhase)
     {
         case 0:
@@ -253,43 +234,57 @@ void HttpDownload::slot_downloadFinished(QNetworkReply *reply)
 
     if(file.open(QIODevice::WriteOnly))
     {
-    // Open a stream to write into the file
-    QDataStream stream(&file);
+        // Open a stream to write into the file
+        QDataStream stream(&file);
 
-    // Get the size of the file
-    int size = reply->size();
+        // Get the size of the file
+        int size = reply->size();
 
-    // Add size to status int for displaying
-    totalSizeDownloadedCurrent = qint64(0);
-    totalSizeDownloaded += qint64(size);
+        // Add size to status int for displaying
+        totalSizeDownloadedCurrent = qint64(0);
+        totalSizeDownloaded += qint64(size);
 
-    // Get the data of the file
-    QByteArray temp = reply->readAll();
+        // Get the data of the file
+        QByteArray temp = reply->readAll();
 
-    // Write the file
-    stream.writeRawData(temp, size);
+        // Write the file
+        stream.writeRawData(temp, size);
 
-    // Set exe permissions
-    file.setPermissions(QFile::ExeUser | QFile::ExeGroup | QFile::ExeOwner | QFile::WriteUser | QFile::WriteGroup | QFile::WriteOwner | QFile::ReadGroup | QFile::ReadOwner | QFile::ReadUser);
+        // Set exe permissions
+        file.setPermissions(QFile::ExeUser | QFile::ExeGroup | QFile::ExeOwner | QFile::WriteUser | QFile::WriteGroup | QFile::WriteOwner | QFile::ReadGroup | QFile::ReadOwner | QFile::ReadUser);
 
-    // Close the file
-    file.close();
-    }
-    else
-    {
-        int a = 0;
+        // Close the file
+        file.close();
+
+        // Check if it is an archive
+        if(fileName.endsWith("tar.xz"))
+        {
+            // Create instance of archiver
+            archive->setFile(installationPath + fileName, installationPath);
+
+            // Connect as start as thread
+            connect(archive, SIGNAL(finished()),SLOT(slot_extractionDone()));
+            archive->start();
+
+            // Set flag and status
+            needsExtraction = true;
+            status = "extracting";
+        }
     }
 
     // If phase 0 take future steps
-    switch(downloadPhase)
+    if(!needsExtraction)
     {
-        case 0:
-            prepareDownload();
-            downloadPhase = 1;
-            break;
-        case 1:
-            getNextFile();
-            break;
+        switch(downloadPhase)
+        {
+            case 0:
+                prepareDownload();
+                downloadPhase = 1;
+                break;
+            case 1:
+                getNextFile();
+                break;
+        }
     }
 }
 
@@ -325,5 +320,14 @@ void HttpDownload::slot_verificationDone()
     status = "downloading";
 
     // Get the next file
+    getNextFile();
+}
+
+void HttpDownload::slot_extractionDone()
+{
+    // Set status
+    status = "downloading";
+
+    // Continue with downloading
     getNextFile();
 }

@@ -91,27 +91,27 @@ void Settings::setSetting(QString _settingName, QString _settingValue)
 
 void Settings::setDefaultSettings()
 {
-    switch(QLocale::system().language())
-    {
-        case QLocale::English:
-            userSettings->setValue("language","english");
-            break;
-        case QLocale::German:
-            userSettings->setValue("language","german");
-            break;
-        case QLocale::Italian:
-            userSettings->setValue("language","italian");
-            break;
-        case QLocale::French:
-            userSettings->setValue("language","french");
-            break;
-        case QLocale::Spanish:
-            userSettings->setValue("language","spain");
-            break;
-        default:
-            userSettings->setValue("language","english");
-            break;
-    }
+//    switch(QLocale::system().language())
+//    {
+//        case QLocale::English:
+//            userSettings->setValue("language","english");
+//            break;
+//        case QLocale::German:
+//            userSettings->setValue("language","german");
+//            break;
+//        case QLocale::Italian:
+//            userSettings->setValue("language","italian");
+//            break;
+//        case QLocale::French:
+//            userSettings->setValue("language","french");
+//            break;
+//        case QLocale::Spanish:
+//            userSettings->setValue("language","spain");
+//            break;
+//        default:
+//            userSettings->setValue("language","english");
+//            break;
+//    }
 
     userSettings->setValue("torPort","6881");
     userSettings->setValue("torDLMax", "0");

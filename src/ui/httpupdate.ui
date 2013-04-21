@@ -26,7 +26,7 @@
    <string>Relics of Annorath - Checking...</string>
   </property>
   <property name="windowIcon">
-   <iconset resource="../../ressources/res.qrc">
+   <iconset resource="../../resources/res.qrc">
     <normaloff>:/images/icon.png</normaloff>:/images/icon.png</iconset>
   </property>
   <property name="styleSheet">
@@ -83,8 +83,8 @@
    </property>
    <property name="font">
     <font>
-     <family>Modern Antiqua</family>
-     <pointsize>12</pointsize>
+     <family>Ubuntu</family>
+     <pointsize>10</pointsize>
      <weight>75</weight>
      <bold>true</bold>
      <stylestrategy>PreferAntialias</stylestrategy>
@@ -106,7 +106,7 @@
   </widget>
  </widget>
  <resources>
-  <include location="../../ressources/res.qrc"/>
+  <include location="../../resources/res.qrc"/>
  </resources>
  <connections/>
 </ui>

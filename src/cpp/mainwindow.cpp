@@ -59,6 +59,14 @@ MainWindow::MainWindow(QWidget *parent) :
 
     torrent = NULL;
 
+    // Center the widget
+    this->setGeometry(QStyle::alignedRect(
+                          Qt::LeftToRight,
+                          Qt::AlignCenter,
+                          this->size(),
+                          qApp->desktop()->availableGeometry()
+                          ));
+
     // Create the tray icon
     setupTray();
 
@@ -98,6 +106,34 @@ MainWindow::MainWindow(QWidget *parent) :
 
     settings.setSetting("installLocation", tmpPath);
 
+    //Create all dirs, maybe one is missing
+    QStringList dirs;
+    dirs << tmpPath + "game"
+         << tmpPath + "game/bin"
+         << tmpPath + "game/data"
+         << tmpPath + "game/lib"
+         << tmpPath + "game/data/logs"
+         << tmpPath + "game/data/relics_of_annorath"
+         << tmpPath + "game/data/relics_of_annorath/configuration"
+         << tmpPath + "game/data/relics_of_annorath/configuration/gui"
+         << tmpPath + "game/data/relics_of_annorath/terrains"
+         << tmpPath + "game/data/relics_of_annorath/terrains/merasurien"
+         << tmpPath + "game/data/relics_of_annorath/terrains/merasurien/1_14_westzones"
+         << tmpPath + "game/data/relics_of_annorath/terrains/merasurien/1_14_westzones/1_14_westzones"
+         << tmpPath + "game/data/relics_of_annorath/terrains/merasurien/1_14_westzones/Layers"
+         << tmpPath + "game/data/relics_of_annorath/terrains/merasurien/3_14_Nordzone1"
+         << tmpPath + "game/data/relics_of_annorath/terrains/merasurien/3_14_Nordzone1/3_14_nordzone1"
+         << tmpPath + "game/data/relics_of_annorath/terrains/merasurien/3_14_Nordzone1/Terrain_Masken"
+         << tmpPath + "game/data/relics_of_annorath/terrains/merasurien/4_14_Nordzone2"
+         << tmpPath + "game/data/relics_of_annorath/terrains/merasurien/4_14_Nordzone2/4_14_nordzone2";
+
+    for(int i = 0; i < dirs.size(); i++)
+    {
+        QDir dir(dirs.at(i));
+        if(!dir.exists())
+            QDir().mkpath(dirs.at(i));
+    }
+
     // Remove window borders
     setWindowFlags(Qt::FramelessWindowHint);
     setAttribute(Qt::WA_TranslucentBackground, true);
@@ -135,12 +171,13 @@ MainWindow::MainWindow(QWidget *parent) :
 
     // Add values to the boxes for language seleciton
     ui->boxLanguage->addItem( "English", "english" );
+    ui->boxLanguage->addItem( "Español", "spanish" );
     ui->boxLanguage->addItem( "Deutsch", "german" );
     ui->boxLanguage->addItem( "Français", "french" );
     ui->boxLanguage->addItem( "Italiano", "italian" );
-    ui->boxLanguage->addItem( "Español", "spain" );
-    ui->boxLanguage->addItem( "Pусский", "russian" );
+    ui->boxLanguage->addItem( "Polski", "polish" );
     ui->boxLanguage->addItem( "Português", "portuguese" );
+    ui->boxLanguage->addItem( "Svenska", "swedish" );
     ui->boxLanguage->addItem( "ελληνικά", "greek" );
 
     // Add rendering options
@@ -149,7 +186,6 @@ MainWindow::MainWindow(QWidget *parent) :
 #ifdef Q_OS_WIN
     // Set rendering options
     ui->boxRendering->addItem("DirectX 9", "direct3d9");
-    ui->boxRendering->addItem("DirectX 10", "direct3d10");
     ui->boxRendering->addItem("DirectX 11", "direct3d11");
 #endif
 
@@ -185,8 +221,14 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->webView_2->page()->setLinkDelegationPolicy(QWebPage::DelegateAllLinks);
     connect(ui->webView_2, SIGNAL(linkClicked( QUrl )), this, SLOT( linkClickedSlot( QUrl ) ));
 
+    // Check configuration
+    refreshConfiguration();
+
     // Retranslate to the new language
     retranslate();
+
+    // Create about page
+    about = new AboutLauncher();
 
     // Start
     configurePath();
@@ -209,6 +251,8 @@ MainWindow::~MainWindow()
     {
         delete ui;
     }
+
+    delete sound;
 }
 
 /******************************************************************************/
@@ -304,39 +348,67 @@ void MainWindow::retranslate()
     // Retranslate the whole ui while language changed
     QApplication::removeTranslator(translator);
 
-    if(settings.getSetting("language") == "english")
-    {
-        translator->load("roa_eng");
-        //this->ui->webView->setUrl(QUrl("http://dev-portal.annorath-game.com/launcher/"));
-    }
-    else
-    {
-        translator->load("roa_ger");
-        //this->ui->webView->setUrl(QUrl("http://dev-portal.annorath-game.com/launcher/"));
-    }
+    // Get current language
+    QString language = settings.getSetting("language");
 
+    // Load translator
+    translator->load(":/translations/roal_" + language);
+
+    // Install translator
     QApplication::installTranslator(translator);
 
-    ui->retranslateUi(this);
+    // Save language to xml
+#ifdef Q_OS_WIN
+    QString filePath = QString(settings.getSetting(QString("installLocation")) + "game/data/relics_of_annorath/configuration/gui/settings.xml").replace("/","\\");
+#else
+    QString filePath = QString(settings.getSetting(QString("installLocation")) + "game/data/relics_of_annorath/configuration/gui/settings.xml");
+#endif
+    QFile file(filePath);
 
-    // Hack while we can not rentranslate stuff outside this ui
-    if(torrent != NULL)
+    // Try to open the file
+    if( file.open( QIODevice::ReadOnly ) )
     {
-        if(pause)
+        // XML object
+        QDomDocument doc("config");
+
+        // Set content
+        if( doc.setContent( &file ) )
         {
-            if ( torrent->getProgress() == 100 )
-                ui->buttonPause->setToolTip(tr("Resume Seeding"));
+            // Close file
+            file.close();
+
+            // Get DomElement
+            QDomElement root = doc.documentElement();
+
+            // Get config child and language after it
+            root = root.firstChildElement("settings").firstChildElement("roa_graphics_language");
+
+            // Set language
+            root.setAttribute("value",language);
+
+            // Open file again
+            if(file.open( QIODevice::WriteOnly | QIODevice::Truncate))
+            {
+                // Stream into it
+                QTextStream stream(&file);
+                stream << doc.toString();
+
+                // Close file
+                file.close();
+            }
             else
-                ui->buttonPause->setToolTip(tr("Resume Update"));
+            {
+                QMessageBox::warning(this,"Can't open configuration",file.errorString());
+            }
         }
         else
         {
-            if ( torrent->getProgress() == 100 )
-                ui->buttonPause->setToolTip(tr("Pause Seeding"));
-            else
-                ui->buttonPause->setToolTip(tr("Pause Update"));
+            QMessageBox::warning(this,"Can't open configuration",file.errorString());
         }
     }
+
+    // Retranslate gui
+    ui->retranslateUi(this);
 
     /// \todo Check this
     this->setEnabled(true);
@@ -367,8 +439,6 @@ void MainWindow::startLauncher()
         timer.start(100);
     }
 
-
-
     // Create background sound
     sound = new CustomSound(settings.getSetting(QString("installLocation")) + "launcher/sounds/background.wav");
     sound->play();
@@ -378,6 +448,137 @@ void MainWindow::startLauncher()
     if(settings.getSetting("launcherMuted") == "true")
     {
         on_buttonMute_clicked();
+    }
+}
+
+QString MainWindow::getXMLValue(QDomElement &_element, QString _nodeName)
+{
+    QDomElement child = _element.firstChildElement(_nodeName);
+    qDebug() << _nodeName << ": " << child.tagName();
+    return child.attribute("value","-1");
+}
+
+void MainWindow::refreshConfiguration()
+{
+    // Open configuration
+#ifdef Q_OS_WIN
+    QString filePath = QString(settings.getSetting(QString("installLocation")) + "game/data/relics_of_annorath/configuration/gui/settings.xml").replace("/","\\");
+#else
+    QString filePath = QString(settings.getSetting(QString("installLocation")) + "game/data/relics_of_annorath/configuration/gui/settings.xml");
+#endif
+    QFile file(filePath);
+
+    // Try to open the file
+    if( file.open( QIODevice::ReadOnly ) )
+    {
+        // XML object
+        QDomDocument doc("config");
+
+        // Set content
+        if( doc.setContent( &file ) )
+        {
+            // Close file
+            file.close();
+
+            // Get DomElement
+            QDomElement root = doc.documentElement();
+
+            // Check config version
+            if(root.attribute("version","-1").toFloat() < ROA_CONFIG_VERSION || root.attribute("version","-1").toInt() == -1)
+            {
+                // Set default config
+                doc.setContent("<?xml version='1.0' encoding='utf-8'?>\n"
+                               "\t<config version=\"2.5\">\n"
+                               "\t\t<settings>\n"
+                               "\t\t\t<roa_graphics_language value=\""+ settings.getSetting("language") + "\"/>\n"
+                               "\t\t\t<roa_graphics_window value=\"0\"/>\n"
+                               "\t\t\t<roa_graphics_resolution value=\"0\"/>\n"
+                               "\t\t\t<roa_graphics_vsync value=\"0\"/>\n"
+                               "\t\t\t<roa_graphics_profile value=\"0\"/>\n"
+                               "\t\t\t<roa_advanced_graphics_gamma value=\"0\"/>\n"
+                               "\t\t\t<roa_advanced_graphics_reflection value=\"0\"/>\n"
+                               "\t\t\t<roa_advanced_graphics_motion_blur value=\"0\"/>\n"
+                               "\t\t\t<roa_advanced_graphics_refraction value=\"0\"/>\n"
+                               "\t\t\t<roa_advanced_graphics_parallax_mapping value=\"0\"/>\n"
+                               "\t\t\t<roa_advanced_graphics_ambient_screen_occlusion value=\"0\"/>\n"
+                               "\t\t\t<roa_advanced_graphics_volumetric_shadows value=\"0\"/>\n"
+                               "\t\t\t<roa_advanced_graphics_shader_quality value=\"0\"/>\n"
+                               "\t\t\t<roa_advanced_graphics_texture_quality value=\"0\"/>\n"
+                               "\t\t\t<roa_advanced_graphics_texture_filter value=\"0\"/>\n"
+                               "\t\t\t<roa_advanced_graphics_anisotropy value=\"0\"/>\n"
+                               "\t\t\t<roa_advanced_graphics_anti_aliasing value=\"0\"/>\n"
+                               "\t\t\t<roa_audio_master value=\"0\"/>\n"
+                               "\t\t\t<roa_kickstarterpage value=\"2\"/>\n"
+                               "\t\t</settings>\n"
+                               "\t</config>)\n");
+
+                // Open file again
+                if(file.open( QIODevice::WriteOnly | QIODevice::Truncate))
+                {
+                    // Stream into it
+                    QTextStream stream(&file);
+                    stream << doc.toString();
+
+                    // Close file
+                    file.close();
+                }
+                else
+                {
+                    QMessageBox::warning(this,"Can't open configuration",file.errorString());
+                }
+            }
+        }
+        else
+        {
+            QMessageBox::warning(this,"Can't open configuration",file.errorString());
+        }
+    }
+    else
+    {
+        // Open file
+        if(file.open( QIODevice::WriteOnly | QIODevice::Truncate))
+        {
+
+            // XML object
+            QDomDocument doc("config");
+
+            // Set default config
+            doc.setContent("<?xml version='1.0' encoding='utf-8'?>\n"
+                           "\t<config version=\"2.5\">\n"
+                           "\t\t<settings>\n"
+                           "\t\t\t<roa_graphics_language value=\""+ settings.getSetting("language") + "\"/>\n"
+                           "\t\t\t<roa_graphics_window value=\"0\"/>\n"
+                           "\t\t\t<roa_graphics_resolution value=\"0\"/>\n"
+                           "\t\t\t<roa_graphics_vsync value=\"0\"/>\n"
+                           "\t\t\t<roa_graphics_profile value=\"0\"/>\n"
+                           "\t\t\t<roa_advanced_graphics_gamma value=\"0\"/>\n"
+                           "\t\t\t<roa_advanced_graphics_reflection value=\"0\"/>\n"
+                           "\t\t\t<roa_advanced_graphics_motion_blur value=\"0\"/>\n"
+                           "\t\t\t<roa_advanced_graphics_refraction value=\"0\"/>\n"
+                           "\t\t\t<roa_advanced_graphics_parallax_mapping value=\"0\"/>\n"
+                           "\t\t\t<roa_advanced_graphics_ambient_screen_occlusion value=\"0\"/>\n"
+                           "\t\t\t<roa_advanced_graphics_volumetric_shadows value=\"0\"/>\n"
+                           "\t\t\t<roa_advanced_graphics_shader_quality value=\"0\"/>\n"
+                           "\t\t\t<roa_advanced_graphics_texture_quality value=\"0\"/>\n"
+                           "\t\t\t<roa_advanced_graphics_texture_filter value=\"0\"/>\n"
+                           "\t\t\t<roa_advanced_graphics_anisotropy value=\"0\"/>\n"
+                           "\t\t\t<roa_advanced_graphics_anti_aliasing value=\"0\"/>\n"
+                           "\t\t\t<roa_audio_master value=\"0\"/>\n"
+                           "\t\t\t<roa_kickstarterpage value=\"2\"/>\n"
+                           "\t\t</settings>\n"
+                           "\t</config>)\n");
+            // Stream into it
+            QTextStream stream(&file);
+            stream << doc.toString();
+
+            // Close file
+            file.close();
+        }
+        else
+        {
+            QMessageBox::warning(this,"Can't open configuration",file.errorString());
+        }
+
     }
 }
 
@@ -515,6 +716,11 @@ void MainWindow::slot_updateHttpStatus()
 
         this->ui->buttonPlay->setText(tr("Wait..."));
     }
+    else if(httpManager->getStatus() == "extracting")
+    {
+        this->ui->progressBar->setFormat(QString(tr("Progress: %p% done - Extracting") + tr(" - Files left: ") + QString::number(httpManager->getFilesLeft())));
+        this->ui->buttonPlay->setText(tr("Wait..."));
+    }
     else if(httpManager->getStatus() == "done")
     {
         this->ui->progressBar->setFormat(QString(tr("Progress: %p% done")));
@@ -594,12 +800,12 @@ void MainWindow::on_buttonPause_clicked()
     // Toggle for pause the torrent
     if(!pause)
     {
-        ui->buttonPause->setStyleSheet("background-image: url(:/images/play.png);");
+        ui->buttonPause->setStyleSheet("background: no-repeat;background-image: url(:/images/play.png);");
         pause = true;
     }
     else
     {
-        ui->buttonPause->setStyleSheet("background-image: url(:/images/pause.png);");
+        ui->buttonPause->setStyleSheet("background: no-repeat;background-image: url(:/images/pause.png);");
         pause = false;
     }
 
@@ -617,7 +823,7 @@ void MainWindow::on_buttonPause_clicked()
 
 void MainWindow::on_buttonAccount_clicked()
 {
-    QDesktopServices::openUrl(QUrl("https://portal.annorath-game.com/"));
+    QDesktopServices::openUrl(QUrl("https://portal.annorath-game.com/en/profile"));
 }
 
 void MainWindow::on_buttonBugTracker_clicked()
@@ -632,7 +838,7 @@ void MainWindow::on_buttonForum_clicked()
 
 void MainWindow::on_buttonNews_clicked()
 {
-    QDesktopServices::openUrl(QUrl("https://portal.annorath-game.com/"));
+    QDesktopServices::openUrl(QUrl("https://portal.annorath-game.com/en/news"));
 }
 
 void MainWindow::slot_slotTrayActivated(QSystemTrayIcon::ActivationReason reason)
@@ -658,18 +864,18 @@ void MainWindow::on_buttonMute_clicked()
 {
     switch(muted)
     {
-        case true:
-            sound->play();
-            muted = false;
-            this->ui->buttonMute->setStyleSheet("background-image: url(:/images/mute0.png);");
-            settings.setSetting("launcherMuted", "false");
-            break;
-        case false:
-            sound->stop();
-            muted = true;
-            this->ui->buttonMute->setStyleSheet("background-image: url(:/images/mute1.png);");
-            settings.setSetting("launcherMuted", "true");
-            break;
+    case true:
+        sound->play();
+        muted = false;
+        this->ui->buttonMute->setStyleSheet("background-image: url(:/images/mute0.png);");
+        settings.setSetting("launcherMuted", "false");
+        break;
+    case false:
+        sound->stop();
+        muted = true;
+        this->ui->buttonMute->setStyleSheet("background-image: url(:/images/mute1.png);");
+        settings.setSetting("launcherMuted", "true");
+        break;
     }
 }
 
@@ -678,19 +884,35 @@ void MainWindow::on_buttonPlay_clicked()
     // The arguments to start the engine
     QStringList arguments;
 
-    QString x, y, fscreen = "1";
+    QString x, y;
+    QString vsync = "0";
+    QString fscreen = "1";
+    QString gamma = "1.0";
+    QString reflection = "1";
+    QString motionBlur = "1";
+    QString refraction = "1";
+    QString parallaxMapping = "1";
+    QString ambientScreenOcclusion = "1";
+    QString volumetricShadows = "1";
+    QString shaderQuality = "1";
+    QString textureQuality = "1";
+    QString textureFilter = "1";
+    QString anisotropy = "2";
+    QString antiAliasing = "0";
 
     // Get screen resolution
     x = QString::number(QApplication::desktop()->screen()->width());
     y = QString::number(QApplication::desktop()->screen()->height());
 
     // Open roa configuration
-    QDomDocument doc("roa");
     QFile file(settings.getSetting(QString("installLocation")) + "game/data/relics_of_annorath/configuration/gui/settings.xml");
 
     // Try to open the file
     if( file.open( QIODevice::ReadOnly ) )
     {
+        // XML object
+        QDomDocument doc("config");
+
         // Set content
         if( doc.setContent( &file ) )
         {
@@ -700,31 +922,169 @@ void MainWindow::on_buttonPlay_clicked()
             // Get DomElement
             QDomElement root = doc.documentElement();
 
-            // Check if it the right structure
-            if( root.tagName() == "config" )
+            // Get config child
+            root = root.firstChildElement("settings");
+
+            // Get resolution
+            if(getXMLValue(root, "roa_graphics_resolution") != "-1" && getXMLValue(root, "roa_graphics_resolution").split("x").size() == 2)
             {
-                // Loop through it
-                QDomNode n = root.firstChild();
-                n = n.firstChild();
+                // Save x and y
+                x = getXMLValue(root, "roa_graphics_resolution").split("x").at(0);
+                y = getXMLValue(root, "roa_graphics_resolution").split("x").at(1);
+            }
 
-                while( !n.isNull() )
-                {
-                    QDomElement e = n.toElement();
+            // Get vsync
+            if(getXMLValue(root, "roa_graphics_vsync") != "-1" &&
+                    (
+                        getXMLValue(root, "roa_graphics_vsync").toInt() == 1 ||
+                        getXMLValue(root, "roa_graphics_vsync").toInt() == 0
+                        ))
+            {
+                vsync = getXMLValue(root, "roa_graphics_vsync");
+            }
 
-                    if( !e.isNull() )
-                    {
-                        if( e.tagName() == "roa_graphics_window" )
-                        {
-                            // Save value
-                            fscreen = e.attribute("value");
-                        }
-                    }
+            // Get fullscreen
+            if(getXMLValue(root, "roa_graphics_window") != "-1" &&
+                    (
+                        getXMLValue(root, "roa_graphics_window").toInt() == 1 ||
+                        getXMLValue(root, "roa_graphics_window").toInt() == 0
+                        ))
+            {
+                fscreen = getXMLValue(root, "roa_graphics_window");
+            }
 
-                    // Try next one
-                    n = n.nextSibling();
-                }
+            // Get gamma
+            if(getXMLValue(root, "roa_advanced_graphics_gamma") != "-1" &&
+                    (
+                        getXMLValue(root, "roa_advanced_graphics_gamma").toFloat() >= 0.5 &&
+                        getXMLValue(root, "roa_advanced_graphics_gamma").toFloat() <= 3.5
+                        ))
+            {
+                gamma = getXMLValue(root, "roa_advanced_graphics_gamma");
+            }
+
+            // Get reflection
+            if(getXMLValue(root, "roa_advanced_graphics_reflection") != "-1" &&
+                    (
+                        getXMLValue(root, "roa_advanced_graphics_reflection").toInt() == 1 ||
+                        getXMLValue(root, "roa_advanced_graphics_reflection").toInt() == 0
+                        ))
+            {
+                reflection = getXMLValue(root, "roa_advanced_graphics_reflection");
+            }
+
+            // Get motion blur
+            if(getXMLValue(root, "roa_advanced_graphics_motion_blur") != "-1" &&
+                    (
+                        getXMLValue(root, "roa_advanced_graphics_motion_blur").toInt() == 1 ||
+                        getXMLValue(root, "roa_advanced_graphics_motion_blur").toInt() == 0
+                        ))
+            {
+                motionBlur = getXMLValue(root, "roa_advanced_graphics_motion_blur");
+            }
+
+            // Get refraction
+            if(getXMLValue(root, "roa_advanced_graphics_refraction") != "-1" &&
+                    (
+                        getXMLValue(root, "roa_advanced_graphics_refraction").toInt() == 1 ||
+                        getXMLValue(root, "roa_advanced_graphics_refraction").toInt() == 0
+                        ))
+            {
+                refraction = getXMLValue(root, "roa_advanced_graphics_refraction");
+            }
+
+            // Get parallax mapping
+            if(getXMLValue(root, "roa_advanced_graphics_parallax_mapping") != "-1" &&
+                    (
+                        getXMLValue(root, "roa_advanced_graphics_parallax_mapping").toInt() == 1 ||
+                        getXMLValue(root, "roa_advanced_graphics_parallax_mapping").toInt() == 0
+                        ))
+            {
+                parallaxMapping = getXMLValue(root, "roa_advanced_graphics_parallax_mapping");
+            }
+
+            // Get ambient screen occlusion
+            if(getXMLValue(root, "roa_advanced_graphics_ambient_screen_occlusion") != "-1" &&
+                    (
+                        getXMLValue(root, "roa_advanced_graphics_ambient_screen_occlusion").toInt() == 1 ||
+                        getXMLValue(root, "roa_advanced_graphics_ambient_screen_occlusion").toInt() == 0
+                        ))
+            {
+                ambientScreenOcclusion = getXMLValue(root, "roa_advanced_graphics_ambient_screen_occlusion");
+            }
+
+            // Get volumetric shadows
+            if(getXMLValue(root, "roa_advanced_graphics_volumetric_shadows") != "-1" &&
+                    (
+                        getXMLValue(root, "roa_advanced_graphics_volumetric_shadows").toInt() == 1 ||
+                        getXMLValue(root, "roa_advanced_graphics_volumetric_shadows").toInt() == 0
+                        ))
+            {
+                volumetricShadows = getXMLValue(root, "roa_advanced_graphics_volumetric_shadows");
+            }
+
+            // Get shader quality
+            if(getXMLValue(root, "roa_advanced_graphics_shader_quality") != "-1" &&
+                    (
+                        getXMLValue(root, "roa_advanced_graphics_shader_quality").toInt() == 0 ||
+                        getXMLValue(root, "roa_advanced_graphics_shader_quality").toInt() == 1 ||
+                        getXMLValue(root, "roa_advanced_graphics_shader_quality").toInt() == 2
+                        ))
+            {
+                shaderQuality = getXMLValue(root, "roa_advanced_graphics_shader_quality");
+            }
+
+            // Get texture quality
+            if(getXMLValue(root, "roa_advanced_graphics_texture_quality") != "-1" &&
+                    (
+                        getXMLValue(root, "roa_advanced_graphics_texture_quality").toInt() == 0 ||
+                        getXMLValue(root, "roa_advanced_graphics_texture_quality").toInt() == 1 ||
+                        getXMLValue(root, "roa_advanced_graphics_texture_quality").toInt() == 2
+                        ))
+            {
+                textureQuality = getXMLValue(root, "roa_advanced_graphics_texture_quality");
+            }
+
+            // Get texture filter
+            if(getXMLValue(root, "roa_advanced_graphics_texture_filter") != "-1" &&
+                    (
+                        getXMLValue(root, "roa_advanced_graphics_texture_filter").toInt() == 0 ||
+                        getXMLValue(root, "roa_advanced_graphics_texture_filter").toInt() == 1
+                        ))
+            {
+                textureFilter = getXMLValue(root, "roa_advanced_graphics_texture_filter");
+            }
+
+            // Get anisotropy
+            if(getXMLValue(root, "roa_advanced_graphics_anisotropy") != "-1" &&
+                    (
+                        getXMLValue(root, "roa_advanced_graphics_anisotropy").toInt() == 0 ||
+                        getXMLValue(root, "roa_advanced_graphics_anisotropy").toInt() == 1 ||
+                        getXMLValue(root, "roa_advanced_graphics_anisotropy").toInt() == 2 ||
+                        getXMLValue(root, "roa_advanced_graphics_anisotropy").toInt() == 3 ||
+                        getXMLValue(root, "roa_advanced_graphics_anisotropy").toInt() == 4
+                        ))
+            {
+                anisotropy = getXMLValue(root, "roa_advanced_graphics_anisotropy");
+            }
+
+            // Get anti aliasing
+            if(getXMLValue(root, "roa_advanced_graphics_anti_aliasing") != "-1" &&
+                    (
+                        getXMLValue(root, "roa_advanced_graphics_anti_aliasing").toInt() == 0 ||
+                        getXMLValue(root, "roa_advanced_graphics_anti_aliasing").toInt() == 1 ||
+                        getXMLValue(root, "roa_advanced_graphics_anti_aliasing").toInt() == 2 ||
+                        getXMLValue(root, "roa_advanced_graphics_anti_aliasing").toInt() == 3 ||
+                        getXMLValue(root, "roa_advanced_graphics_anti_aliasing").toInt() == 4
+                        ))
+            {
+                antiAliasing = getXMLValue(root, "roa_advanced_graphics_anti_aliasing");
             }
         }
+    }
+    else
+    {
+        QMessageBox::warning(this,"Can't open configuration","Configuration couldn't be opened!");
     }
 
     // Check for right value
@@ -750,7 +1110,28 @@ void MainWindow::on_buttonPlay_clicked()
     }
 
 #ifdef Q_OS_WIN
-     QString _path = getenv("PATH");
+    // Prepare complate arguments string
+    QString argumentsComplete = "";
+    argumentsComplete = fscreen;
+    argumentsComplete += " " + x;
+    argumentsComplete += " " + y;
+    argumentsComplete += " " + vsync;
+    argumentsComplete += " " + gamma;
+    argumentsComplete += " " + reflection;
+    argumentsComplete += " " + motionBlur;
+    argumentsComplete += " " + refraction;
+    argumentsComplete += " " + parallaxMapping;
+    argumentsComplete += " " + ambientScreenOcclusion;
+    argumentsComplete += " " + volumetricShadows;
+    argumentsComplete += " " + shaderQuality;
+    argumentsComplete += " " + textureQuality;
+    argumentsComplete += " " + textureFilter;
+    argumentsComplete += " " + anisotropy;
+    argumentsComplete += " " + antiAliasing;
+    argumentsComplete += " " + settings.getSetting("rendering");
+
+
+    QString _path = getenv("PATH");
     _path += QString(";" + settings.getSetting(QString("installLocation")) + "game/bin");
     _path += QString(";" + settings.getSetting(QString("installLocation")) + "game/lib");
 
@@ -761,7 +1142,7 @@ void MainWindow::on_buttonPlay_clicked()
 
     SetEnvironmentVariable(envVal,path);
 
-    ShellExecute(0, 0, reinterpret_cast<const WCHAR*>(QString(settings.getSetting(QString("installLocation")) + "game/bin/roa.exe").utf16()), reinterpret_cast<const WCHAR*>(QString(" " + settings.getSetting(QString("rendering")) + " " + x + " " + y + " " + fscreen).utf16()), 0, SW_NORMAL);
+    ShellExecute(0, 0, reinterpret_cast<const WCHAR*>(QString(settings.getSetting(QString("installLocation")) + "game/bin/roa.exe").utf16()), reinterpret_cast<const WCHAR*>(QString(" " + argumentsComplete).utf16()), 0, SW_HIDE);
 #endif
 
 #ifdef Q_OS_LINUX
@@ -773,7 +1154,7 @@ void MainWindow::on_buttonPlay_clicked()
     env.insert("LD_LIBRARY_PATH",QString(settings.getSetting(QString("installLocation")) + "game/lib"));
 
     // Create the arguments
-    arguments << "opengl" << QString(x) << QString(y) << QString(fscreen);
+    arguments << fscreen << x << y << vsync << gamma << reflection << motionBlur << refraction << parallaxMapping << ambientScreenOcclusion << volumetricShadows << shaderQuality << textureQuality << textureFilter << anisotropy << antiAliasing << settings.getSetting("rendering");
 
     // Set the new nev
     game.setProcessEnvironment(env);
@@ -835,17 +1216,17 @@ void MainWindow::on_checkHTTP_clicked()
 
 void MainWindow::on_buttonContact_clicked()
 {
-    QDesktopServices::openUrl(QUrl("https://portal.annorath-game.com/"));
+    QDesktopServices::openUrl(QUrl("https://portal.annorath-game.com/en/contact"));
 }
 
 void MainWindow::on_buttonHelp_clicked()
 {
-    QDesktopServices::openUrl(QUrl("https://portal.annorath-game.com/"));
+    QDesktopServices::openUrl(QUrl("https://portal.annorath-game.com/en/help"));
 }
 
 void MainWindow::on_buttonFAQ_clicked()
 {
-    QDesktopServices::openUrl(QUrl("https://portal.annorath-game.com/"));
+    QDesktopServices::openUrl(QUrl("https://portal.annorath-game.com/en/faq"));
 }
 
 void MainWindow::linkClickedSlot(QUrl _url)
@@ -884,3 +1265,7 @@ void MainWindow::slot_error(QProcess::ProcessError _error)
     }
 }
 
+void MainWindow::on_buttonAbout_clicked()
+{
+    about->show();
+}

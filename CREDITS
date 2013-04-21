@@ -10,5 +10,11 @@ Special thanks to:
 - Boost
 	http://www.boost.org/
 
-- qt
-	http://qt-project.org/
+- SFML
+	http://www.sfml-dev.org/
+
+- libarchive
+	https://github.com/libarchive/libarchive
+
+- xz utils
+	http://tukaani.org/xz/

@@ -66,6 +66,8 @@
 /*                                                                            */
 /******************************************************************************/
 #include "filevalidationthread.h"
+#include "constants.h"
+#include "filedecompression.h"
 
 /**
  * \brief Class for the torrent stuff
@@ -100,15 +102,40 @@ class HttpDownload : public QObject
         */
         ~HttpDownload();
 
+        /**
+         * @brief Get the current progress
+         * @return The progress as per cent
+         */
         int progress();
 
+        /**
+         * @brief Get network speed
+         * @return The network speed
+         */
         double networkSpeed();
 
+        /**
+         * @brief Size of files to download
+         * @return The size
+         */
         qint64 getFullDownloadSize();
+
+        /**
+         * @brief Size of left files to download
+         * @return  The size
+         */
         qint64 getCurrentDownloadSize();
 
+        /**
+         * @brief Current status
+         * @return The status
+         */
         QString getStatus();
 
+        /**
+         * @brief Files left to download
+         * @return The amount
+         */
         int getFilesLeft();
 
     private:
@@ -169,11 +196,25 @@ class HttpDownload : public QObject
          */
         QNetworkReply *currentDownload;
 
+        /**
+         * @brief Timer for download calculation
+         */
         QTime downloadTime;
 
+        /**
+         * @brief Status string
+         */
         QString status;
 
+        /**
+         * @brief Validation thread for file checking, non-blocking
+         */
         FileValidationThread *thread;
+
+        /**
+         * @brief Decompress tar.xz archives
+         */
+        FileDecompression *archive;
 
         /**
          * \brief Current download phase (0 init, 1 file download)
@@ -200,6 +241,9 @@ class HttpDownload : public QObject
          */
         qint64 totalSizeDownloadedCurrent;
 
+        /**
+         * @brief Download speed
+         */
         double speed;
 
         /******************************************************************************/
@@ -236,8 +280,16 @@ class HttpDownload : public QObject
          */
         void slot_downloadFinished(QNetworkReply *reply);
 
+        /**
+         * @brief Update download progress
+         * @param bytesReceived Bytes received
+         * @param bytesTotal Bytes total to download
+         */
         void downloadProgress(qint64 bytesReceived, qint64 bytesTotal);
 
+        /**
+         * @brief Verification done
+         */
         void slot_verificationDone();
 
         /**
@@ -246,6 +298,11 @@ class HttpDownload : public QObject
          * \param errors Error list
          */
         void slot_getSSLError(QNetworkReply* reply, const QList<QSslError> &errors);
+
+        /**
+         * @brief Extraction done of archive
+         */
+        void slot_extractionDone();
 };
 
 

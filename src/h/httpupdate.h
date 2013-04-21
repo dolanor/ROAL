@@ -72,6 +72,7 @@
 /*                                                                            */
 /******************************************************************************/
 #include "settings.h"
+#include "constants.h"
 
 #ifdef Q_OS_WIN
 #include <Windows.h>
@@ -218,6 +219,9 @@ class HttpUpdate : public QWidget
          */
         void slot_startCheck();
 
+        /**
+         * @brief Installer finished
+         */
         void slot_installerFinished();
 
     signals:

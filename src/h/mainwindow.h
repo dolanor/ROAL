@@ -58,6 +58,8 @@
 #include <QDesktopWidget>
 #include <QtXml/QDomDocument>
 #include <QWebFrame>
+#include <QMap>
+#include <QDesktopWidget>
 
 /******************************************************************************/
 /*                                                                            */
@@ -70,11 +72,14 @@
 #include "httpdownload.h"
 #include "firstrun.h"
 #include "customsound.h"
+#include "aboutlauncher.h"
+#include "constants.h"
 
 /**
  * \addtogroup Ui
  */
-namespace Ui {
+namespace Ui
+{
     class MainWindow;
 }
 
@@ -195,6 +200,11 @@ class MainWindow : public QMainWindow
         FirstRun *firstRun;
 
         /**
+         * @brief About page
+         */
+        AboutLauncher *about;
+
+        /**
          * \brief Flag for checking if window is moved
          */
         bool moving;
@@ -240,7 +250,21 @@ class MainWindow : public QMainWindow
          */
         void retranslate();
 
+        /**
+         * @brief Start launcher
+         */
         void startLauncher();
+
+        /**
+         * @brief Get value from XML-Node
+         */
+        QString getXMLValue(QDomElement &_element, QString _nodeName);
+
+        /**
+         * @brief Check if configuration needs update
+         * @todo Add migration code here
+         */
+        void refreshConfiguration();
 
         /******************************************************************************/
         /*                                                                            */
@@ -302,7 +326,6 @@ class MainWindow : public QMainWindow
          * \brief Get newst state about the http download
          */
         void slot_updateHttpStatus();
-
 
         /**
          * \brief Hide/Unhide the launcher
@@ -370,15 +393,39 @@ class MainWindow : public QMainWindow
          */
         void slot_boxRendering_currentIndexChanged(int index);
 
+        /**
+         * @brief Change download mode
+         * @param _mode The download mode
+         */
         void slot_setDownloadMethod(bool _mode);
 
+        /**
+         * @brief Show contact
+         */
         void on_buttonContact_clicked();
+
+        /**
+         * @brief Show help
+         */
         void on_buttonHelp_clicked();
+
+        /**
+         * @brief Show FAQ
+         */
         void on_buttonFAQ_clicked();
 
+        /**
+         * @brief Link clicked, check for new window or ajax call
+         * @param _url The url
+         */
         void linkClickedSlot(QUrl _url);
 
+        /**
+         * @brief Process error
+         * @param _error The error
+         */
         void slot_error(QProcess::ProcessError _error);
+        void on_buttonAbout_clicked();
 };
 
 #endif // MAINWINDOW_H

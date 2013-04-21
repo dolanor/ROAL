@@ -1,0 +1,24 @@
+<RCC>
+    <qresource prefix="/">
+        <file>certs/ca.pem</file>
+        <file>certs/class2.pem</file>
+        <file>images/mute0.png</file>
+        <file>images/mute1.png</file>
+        <file>images/pause.png</file>
+        <file>images/play.png</file>
+        <file>images/icon.png</file>
+        <file>images/arrow.png</file>
+        <file>images/updater.png</file>
+        <file>images/bg.png</file>
+        <file>translations/roal_english.qm</file>
+        <file>translations/roal_french.qm</file>
+        <file>translations/roal_german.qm</file>
+        <file>translations/roal_greek.qm</file>
+        <file>translations/roal_italian.qm</file>
+        <file>translations/roal_polish.qm</file>
+        <file>translations/roal_portuguese.qm</file>
+        <file>translations/roal_spanish.qm</file>
+        <file>translations/roal_swedish.qm</file>
+        <file>images/popup.png</file>
+    </qresource>
+</RCC>

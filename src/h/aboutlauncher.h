@@ -1,6 +1,3 @@
-#ifndef CUSTOMSOUND_H
-#define CUSTOMSOUND_H
-
 /**
  * \copyright
  *              Copyright © 2011 Manuel Gysin
@@ -25,9 +22,9 @@
  *              You should have received a copy of the GNU General Public License
  *              along with Relics of Annorath Launcher.  If not, see <http://www.gnu.org/licenses/>.
  *
- * \brief       Plays sound in the launcher.
+ * \brief       About dialog
  *
- * \file    	customsound.h
+ * \file    	aboutlauncher.h
  *
  * \note
  *
@@ -35,26 +32,26 @@
  *
  * \author  	Manuel Gysin <manuel.gysin@quantum-bytes.com>
  *
- * \date        2011/04/10 19:00:00 GMT+1
- *              2012/11/30 23:10:00 GMT+1
+ * \date        2013/04/14 19:00:00 GMT+1
  *
  */
+
+#ifndef ABOUT_LAUNCHER_H
+#define ABOUT_LAUNCHER_H
 
 /******************************************************************************/
 /*                                                                            */
 /*    C/C++ includes                                                          */
 /*                                                                            */
 /******************************************************************************/
-#include <SFML/Audio.hpp>
 
 /******************************************************************************/
 /*                                                                            */
 /*    Qt includes                                                             */
 /*                                                                            */
 /******************************************************************************/
-#include <QString>
-#include <QMessageBox>
-#include <QThread>
+#include <QWidget>
+#include <QDesktopWidget>
 
 /******************************************************************************/
 /*                                                                            */
@@ -62,12 +59,27 @@
 /*                                                                            */
 /******************************************************************************/
 
+#define ABOUT_PAGE_LICENSE 0
+#define ABOUT_PAGE_DEVELOPERS 1
+#define ABOUT_PAGE_TRANSLATORS 2
+
 /**
- * @brief Class for sound playing
+ * \addtogroup Ui
  */
-class CustomSound : public QThread
+namespace Ui
 {
+    class AboutLauncher;
+}
+
+/**
+ * \brief Displays about widget
+ */
+class AboutLauncher : public QWidget
+{
+    Q_OBJECT
+    
     public:
+
         /******************************************************************************/
         /*                                                                            */
         /*    Members                                                                 */
@@ -82,46 +94,41 @@ class CustomSound : public QThread
 
         /**
          * @brief Constructor
-         * @param _path Path to sound file
+         * @param parent Parent widget
          */
-        CustomSound(QString _path);
+        explicit AboutLauncher(QWidget *parent = 0);
 
         /**
-         * @brief Deconstructor
-         */
-        ~CustomSound();
-
-        /**
-         * @brief Run thread
-         */
-        void run();
-
-        /**
-         * @brief Start playing
-         */
-        void play();
-
-        /**
-         * @brief Stop playing
-         */
-        void stop();
+          * @brief Deconstructor
+          */
+        ~AboutLauncher();
+    
+    private slots:
+        void on_bLicense_clicked();
+        void on_bDevelopers_clicked();
+        void on_bTranslators_clicked();
+        void on_bClose_clicked();
 
     private:
+
         /******************************************************************************/
         /*                                                                            */
         /*    Members                                                                 */
         /*                                                                            */
         /******************************************************************************/
+
         /**
-         * @brief Sound object
+         * @brief The ui file aka form
          */
-        sf::Music sound;
+        Ui::AboutLauncher *ui;
 
         /******************************************************************************/
         /*                                                                            */
         /*    Methods                                                                 */
         /*                                                                            */
         /******************************************************************************/
+
+        void displayText(int _index);
 };
 
-#endif // CUSTOMSOUND_H
+#endif // ABOUT_LAUNCHER_H
