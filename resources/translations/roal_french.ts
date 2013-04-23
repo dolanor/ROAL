@@ -41,21 +41,21 @@ p, li { white-space: pre-wrap; }
 &lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;BitTorrent&lt;/span&gt;&lt;/p&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;+ Téléchargement à haute vitesse&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;+ Mises à jour ajoutées&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;+ Aidez-nous à économiser la bande passante&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;+ Mises à jour incrémentales&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;+ Vous nous aidez à économiser la bande passante&lt;/p&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;- Vous devez ouvrir des ports&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;- Vous téléchargez à d&apos;autres clients&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;- Vous téléversez à d&apos;autres utilisateurs&lt;/p&gt;
 &lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;HTTP&lt;/span&gt;&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;+ Pas de téléchargement&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;+ Pas besoin d&apos;ouvrir des portes&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;- Incrémenter des mises à jour n&apos;est pas nécessaire&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;- Vitesse lente&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;+ Pas de téléversement&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;+ Pas besoin d&apos;ouvrir des ports&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;- Pas de mises à jour incrémentales&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;- Téléchargement plus lente&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location filename="../../src/ui/firstrun.ui" line="69"/>
         <source>Use HTTP</source>
-        <translation>Utiliser le HTTP</translation>
+        <translation>Utiliser HTTP</translation>
     </message>
 </context>
 <context>
@@ -73,12 +73,12 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../../src/cpp/httpupdate.cpp" line="182"/>
         <source>No launcher updates found</source>
-        <translation>Aucun lanceur de mises à jour trouvé</translation>
+        <translation>Aucune mises à jour pour le lanceur trouvée</translation>
     </message>
     <message>
         <location filename="../../src/cpp/httpupdate.cpp" line="187"/>
         <source>Downloading new launcher</source>
-        <translation>Téléchargement du nouveau launcher en cours</translation>
+        <translation>Téléchargement du nouveau lanceur en cours</translation>
     </message>
     <message>
         <location filename="../../src/cpp/httpupdate.cpp" line="209"/>
@@ -120,12 +120,12 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../../src/ui/mainwindow.ui" line="2868"/>
         <source>Disable the use of the bit torrent protocol</source>
-        <translation>Désactiver l&apos;utilisation du protocole bit torrent</translation>
+        <translation>Désactiver l&apos;utilisation du protocole bittorrent</translation>
     </message>
     <message>
         <location filename="../../src/ui/mainwindow.ui" line="2874"/>
         <source>Use HTTP:</source>
-        <translation>Utiliser le HTTP:</translation>
+        <translation>Utiliser HTTP:</translation>
     </message>
     <message>
         <location filename="../../src/ui/mainwindow.ui" line="117"/>
@@ -158,12 +158,12 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../../src/ui/mainwindow.ui" line="366"/>
         <source>Down:</source>
-        <translation>En bas:</translation>
+        <translation>Down:</translation>
     </message>
     <message>
         <location filename="../../src/ui/mainwindow.ui" line="389"/>
         <source>Up:</source>
-        <translation>En haut:</translation>
+        <translation>Up:</translation>
     </message>
     <message>
         <location filename="../../src/ui/mainwindow.ui" line="466"/>
@@ -203,7 +203,7 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../../src/ui/mainwindow.ui" line="736"/>
         <source>About</source>
-        <translation>A propos de</translation>
+        <translation>À propos de</translation>
     </message>
     <message>
         <location filename="../../src/ui/mainwindow.ui" line="800"/>
@@ -228,17 +228,17 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../../src/cpp/mainwindow.cpp" line="326"/>
         <source>Resume Seeding</source>
-        <translation>Reprendre le Seeding</translation>
+        <translation>Reprendre le Partage</translation>
     </message>
     <message>
         <location filename="../../src/cpp/mainwindow.cpp" line="328"/>
         <source>Resume Update</source>
-        <translation>Reprender la mise à jour</translation>
+        <translation>Reprendre la mise à jour</translation>
     </message>
     <message>
         <location filename="../../src/cpp/mainwindow.cpp" line="333"/>
         <source>Pause Seeding</source>
-        <translation>Mettre en pause le Seeding</translation>
+        <translation>Mettre en pause le partage</translation>
     </message>
     <message>
         <location filename="../../src/cpp/mainwindow.cpp" line="335"/>
@@ -248,17 +248,17 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../../src/cpp/mainwindow.cpp" line="485"/>
         <source> kB/s</source>
-        <translation> kB/s</translation>
+        <translation> ko/s</translation>
     </message>
     <message>
         <location filename="../../src/cpp/mainwindow.cpp" line="486"/>
         <source>0 kB/s</source>
-        <translation>0 kB/s</translation>
+        <translation>0 ko/s</translation>
     </message>
     <message>
         <location filename="../../src/cpp/mainwindow.cpp" line="487"/>
         <source> MB</source>
-        <translation> MB</translation>
+        <translation> Mo</translation>
     </message>
     <message>
         <location filename="../../src/cpp/mainwindow.cpp" line="492"/>
@@ -272,7 +272,7 @@ p, li { white-space: pre-wrap; }
         <location filename="../../src/cpp/mainwindow.cpp" line="518"/>
         <location filename="../../src/cpp/mainwindow.cpp" line="561"/>
         <source>Progress: %p% done</source>
-        <translation>Progression:%p% effectuée</translation>
+        <translation>Progression : %p% effectuée</translation>
     </message>
     <message>
         <location filename="../../src/cpp/mainwindow.cpp" line="503"/>
@@ -295,19 +295,19 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../../src/cpp/mainwindow.cpp" line="538"/>
         <source>Progress: %p% done - Preparing</source>
-        <translation>Progression:%p% effectuée - Préparation</translation>
+        <translation>Progression : %p% effectuée - Préparation</translation>
     </message>
     <message>
         <location filename="../../src/cpp/mainwindow.cpp" line="549"/>
         <source>Progress: %p% done - Calculating</source>
-        <translation>Progression:%p% effectuée - Calcul</translation>
+        <translation>Progression : %p% effectuée - Calcul</translation>
     </message>
     <message>
         <location filename="../../src/cpp/mainwindow.cpp" line="553"/>
         <location filename="../../src/cpp/mainwindow.cpp" line="557"/>
         <location filename="../../src/cpp/mainwindow.cpp" line="574"/>
         <source>Progress: %p% done - ETA: </source>
-        <translation>Progression:%p% effectuée - ETA: </translation>
+        <translation>Progression : %p% effectuée - ETA : </translation>
     </message>
     <message>
         <location filename="../../src/cpp/mainwindow.cpp" line="553"/>
@@ -337,12 +337,12 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../../src/cpp/mainwindow.cpp" line="832"/>
         <source>Please restart the launcher</source>
-        <translation>Veuillez relancer le launcher</translation>
+        <translation>Veuillez relancer le lanceur</translation>
     </message>
     <message>
         <location filename="../../src/cpp/mainwindow.cpp" line="832"/>
         <source>Please restart the launcher to switch the download mode.</source>
-        <translation>Veuillez relancer le launcher pour modifier le mode de téléchargement.</translation>
+        <translation>Veuillez relancer le lanceur pour modifier le mode de téléchargement.</translation>
     </message>
 </context>
 <context>
@@ -392,7 +392,7 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../../src/cpp/torrentclient.cpp" line="204"/>
         <source>Seeding</source>
-        <translation>Seeding</translation>
+        <translation>Partage</translation>
     </message>
     <message>
         <location filename="../../src/cpp/torrentclient.cpp" line="206"/>
